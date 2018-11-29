@@ -13,9 +13,8 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-from keras.models import Sequential
-from keras.layers.core import Dense
-from keras.optimizers import SGD
+import tensorflow as tf
+from tensorflow.keras import layers
 
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib
@@ -79,10 +78,10 @@ trainY = lb.fit_transform(trainY)
 testY = lb.transform(testY)
 
 # define the 3072-1024-512-3 architecture using Keras
-model = Sequential()
-model.add(Dense(1024, input_shape=(3072,), activation="sigmoid"))
-model.add(Dense(512, activation="sigmoid"))
-model.add(Dense(len(lb.classes_), activation="softmax"))
+model = tf.keras.Sequential()
+model.add(layers.Dense(1024, input_shape=(3072,), activation="sigmoid"))
+model.add(layers.Dense(512, activation="sigmoid"))
+model.add(layers.Dense(len(lb.classes_), activation="softmax"))
 
 # initialize our initial learning rate and # of epochs to train for
 INIT_LR = 0.01
@@ -92,7 +91,7 @@ EPOCHS = 75
 # cross-entropy loss (you'll want to use binary_crossentropy
 # for 2-class classification)
 print("[INFO] training network...")
-opt = SGD(lr=INIT_LR)
+opt = tf.keras.optimizers.SGD(lr=INIT_LR)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
