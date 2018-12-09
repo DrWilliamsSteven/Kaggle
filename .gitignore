@@ -1,3 +1,7 @@
 node_modules
 .vscode
 .DS_Store
+
+malaria_classifier/cell_images
+malaria_classifier/cell_images_temp
+*.zip
