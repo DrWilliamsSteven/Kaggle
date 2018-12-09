@@ -31,10 +31,10 @@ ap.add_argument("-l", "--label-bin", required=True,
                 help="path to output label binarizer")
 ap.add_argument("-p", "--plot", required=True,
                 help="path to output accuracy/loss plot")
-ap.add_argument("-i", "--initlr", required=True, type=float,
-                help="initial learning rate")
-ap.add_argument("-e", "--epochs", required=True, type=int,
-                help="number of epochs")
+# ap.add_argument("-i", "--initlr", required=True, type=float,
+#                 help="initial learning rate")
+# ap.add_argument("-e", "--epochs", required=True, type=int,
+#                 help="number of epochs")
 args = vars(ap.parse_args())
 
 
@@ -94,25 +94,30 @@ def convertLabels(split_data):
     return (lb, trainY_vector, testY_vector)
 
 
-def constructNetwork(lb, _args=args):
+def constructNetwork(lb, _initlr, _args=args):
     # define the 3072-1024-512-3 architecture using Keras
     model = tf.keras.Sequential()
     model.add(layers.Dense(1024, input_shape=(3072,), activation="sigmoid"))
     model.add(layers.Dense(512, activation="sigmoid"))
+
+    # model.add(layers.Dense(256, activation="sigmoid"))
+    model.add(layers.Dense(16, activation="sigmoid"))
+    # model.add(layers.Dense(512, activation="sigmoid"))
+    # model.add(layers.Dense(64, activation="sigmoid"))
     model.add(layers.Dense(len(lb.classes_), activation="softmax"))
 
     # compile the model using SGD as our optimizer and categorical
     # cross-entropy loss (you'll want to use binary_crossentropy
     # for 2-class classification)
     print("[INFO] training network...")
-    opt = tf.keras.optimizers.SGD(lr=_args["initlr"])
+    opt = tf.keras.optimizers.SGD(lr=_initlr)
     model.compile(loss="categorical_crossentropy", optimizer=opt,
                   metrics=["accuracy"])
 
     return model
 
 
-def trainNetwork(model, split_data, _epochs=args["epochs"]):
+def trainNetwork(model, split_data, _epochs):
 
     (trainX, testX, trainY, testY) = split_data
     # train the neural network
@@ -122,7 +127,7 @@ def trainNetwork(model, split_data, _epochs=args["epochs"]):
     return H
 
 
-def evaluateNetwork(model, split_data, lb, H, _epochs=args["epochs"]):
+def evaluateNetwork(model, split_data, lb, H, _epochs, initlr_value):
 
     (trainX, testX, trainY, testY) = split_data
 
@@ -141,11 +146,11 @@ def evaluateNetwork(model, split_data, lb, H, _epochs=args["epochs"]):
     plt.plot(N, H.history["val_loss"], label="val_loss")
     plt.plot(N, H.history["acc"], label="train_acc")
     plt.plot(N, H.history["val_acc"], label="val_acc")
-    plt.title("Training Loss and Accuracy (Simple NN)")
+    plt.title(f'Training Loss and Accuracy (Simple NN) Epochs:{_epochs}. InitLR:{initlr_value}.')
     plt.xlabel("Epoch #")
     plt.ylabel("Loss/Accuracy")
     plt.legend()
-    plt.savefig(args["plot"])
+    plt.savefig(f'output/simple_nn_plot_{_epochs}_{initlr_value}.png')
     print("[INFO] done evaluating.")
     return
 
@@ -160,19 +165,28 @@ def saveModelToDisk(model, lb, _args=args):
     return
 
 
-def train_simple_nn(_args=args, _preprocessing=preprocessing, _convertLabels=convertLabels, _constructNetwork=constructNetwork, _trainNetwork=trainNetwork, _evaluateNetwork=evaluateNetwork, _saveModelToDisk=saveModelToDisk):
+def train_simple_nn(epochs_value, initlr_value, _args=args, _preprocessing=preprocessing, _convertLabels=convertLabels, _constructNetwork=constructNetwork, _trainNetwork=trainNetwork, _evaluateNetwork=evaluateNetwork, _saveModelToDisk=saveModelToDisk):
 
     split_data = _preprocessing()
     (trainX, testX, trainY, testY) = split_data
 
     (lb, trainY_vector, testY_vector) = _convertLabels(split_data)
-    model = _constructNetwork(lb)
+    model = _constructNetwork(lb, initlr_value)
 
     updated_split_data = (trainX, testX, trainY_vector, testY_vector)
-    H = _trainNetwork(model, updated_split_data)
+    H = _trainNetwork(model, updated_split_data, epochs_value)
 
-    _evaluateNetwork(model, updated_split_data, lb, H)
+    _evaluateNetwork(model, updated_split_data, lb, H, epochs_value, initlr_value)
     _saveModelToDisk(model, lb)
 
 
-train_simple_nn()
+
+from itertools import product
+
+epoch_values = np.arange(50, 200, 50)
+initlr_values = np.arange(0.1, 0.9, 0.1)
+layers_values = list(range(2, 4))
+
+for epochs_value, initlr_value in product(epoch_values, initlr_values):
+    train_simple_nn(epochs_value, initlr_value)
+
