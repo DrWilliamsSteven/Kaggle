@@ -3,19 +3,21 @@
 
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib
+import matplotlib.pyplot as plt
 matplotlib.use("Agg")
 
 # import the necessary packages
-from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import LearningRateScheduler
-from keras.optimizers import SGD
-from pyimagesearch.resnet import ResNet
-from pyimagesearch import config
-from sklearn.metrics import classification_report
-from imutils import paths
-import matplotlib.pyplot as plt
-import numpy as np
 import argparse
+from imutils import paths
+import numpy as np
+from sklearn.metrics import classification_report
+
+from pyimagesearch import config
+from pyimagesearch.resnet import ResNet
+
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import LearningRateScheduler
+from tensorflow.keras.optimizers import SGD
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
